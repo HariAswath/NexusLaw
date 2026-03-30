@@ -60,7 +60,7 @@ export const getCases = async (filters = {}) => {
     return results;
   }
   const { data } = await client.get('/cases', { params: filters });
-  return data;
+  return data.data;
 };
 
 export const getCaseById = async (id) => {
@@ -78,7 +78,7 @@ export const getCaseById = async (id) => {
     };
   }
   const { data } = await client.get(`/cases/${id}`);
-  return data;
+  return data.data;
 };
 
 export const getPrecedents = async (caseId) => {
@@ -87,7 +87,7 @@ export const getPrecedents = async (caseId) => {
     return MOCK_PRECEDENTS[Number(caseId)] || [];
   }
   const { data } = await client.get(`/cases/${caseId}/precedents`);
-  return data;
+  return data.data;
 };
 
 export const getCaseStats = async () => {
@@ -96,7 +96,7 @@ export const getCaseStats = async () => {
     return MOCK_STATS;
   }
   const { data } = await client.get('/cases/stats');
-  return data;
+  return data.data;
 };
 
 export const createCase = async (payload) => {
@@ -107,7 +107,7 @@ export const createCase = async (payload) => {
     return newCase;
   }
   const { data } = await client.post('/cases', payload);
-  return data;
+  return data.data ?? data;
 };
 
 export const updateCase = async (id, payload) => {
@@ -119,7 +119,7 @@ export const updateCase = async (id, payload) => {
     return MOCK_CASES[idx];
   }
   const { data } = await client.put(`/cases/${id}`, payload);
-  return data;
+  return data.data ?? data;
 };
 
 export const deleteCase = async (id) => {

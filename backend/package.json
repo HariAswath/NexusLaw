@@ -1,0 +1,31 @@
+{
+  "name": "nexuslaw-backend",
+  "version": "1.0.0",
+  "description": "NexusLaw - Legal Case Database API Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "legal",
+    "case-management",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs":           "^2.4.3",
+    "cors":               "^2.8.5",
+    "dotenv":             "^16.0.0",
+    "express":            "^4.18.0",
+    "express-validator":  "^7.0.0",
+    "jsonwebtoken":       "^9.0.0",
+    "morgan":             "^1.10.0",
+    "mysql2":             "^3.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
