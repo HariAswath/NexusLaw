@@ -132,3 +132,30 @@ export const deleteCase = async (id) => {
   const { data } = await client.delete(`/cases/${id}`);
   return data;
 };
+
+export const getCaseLogs = async (id) => {
+  if (isMockMode()) {
+    await delay();
+    return [
+      { log_id: 1, event_type: 'Creation', new_value: 'Open', notes: 'Mock case initialized', created_at: '2024-01-15 10:00:00', user_name: 'Admin User' }
+    ];
+  }
+  const { data } = await client.get(`/cases/${id}/logs`);
+  return data.data;
+};
+
+export const saveJudgement = async (caseId, judgementData) => {
+  if (isMockMode()) {
+    await delay();
+    return { success: true };
+  }
+  
+  // If judgement has an ID, use PUT, otherwise use POST
+  if (judgementData.judgement_id) {
+    const { data } = await client.put(`/cases/judgement/${judgementData.judgement_id}`, judgementData);
+    return data;
+  } else {
+    const { data } = await client.post(`/cases/${caseId}/judgement`, judgementData);
+    return data;
+  }
+};

@@ -104,4 +104,18 @@ SELECT
   c.status       AS precedent_status,
   p.notes
 FROM Precedents p
-JOIN Cases c ON c.case_id = p.precedent_case_id;
+-- ── Case Logs (Audit Trail) ─────────────────────────────
+CREATE TABLE IF NOT EXISTS CaseLogs (
+  log_id      INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  case_id     INT UNSIGNED NOT NULL,
+  user_id     INT UNSIGNED,
+  event_type  ENUM('Creation', 'StatusChange', 'DetailUpdate') NOT NULL,
+  old_value   VARCHAR(100),
+  new_value   VARCHAR(100),
+  notes       TEXT,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (case_id) REFERENCES Cases(case_id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL,
+  INDEX idx_log_case (case_id)
+) ENGINE=InnoDB;
+

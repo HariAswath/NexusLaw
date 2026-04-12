@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MdArrowBack, MdEdit, MdDelete, MdLink,
-  MdPerson, MdGavel, MdTag
+  MdPerson, MdGavel, MdTag, MdHistory, MdEventNote
 } from 'react-icons/md';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
 import PrecedentCard from '../components/PrecedentCard';
-import { getCaseById, getPrecedents, deleteCase } from '../api/cases';
+import { getCaseById, getPrecedents, deleteCase, getCaseLogs } from '../api/cases';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -20,13 +20,16 @@ export default function CaseDetail() {
 
   const [caseData, setCaseData]     = useState(null);
   const [precedents, setPrecedents] = useState([]);
+  const [logs, setLogs]             = useState([]);
   const [loadingCase, setLoadingCase] = useState(true);
   const [loadingPrec, setLoadingPrec] = useState(true);
+  const [loadingLogs, setLoadingLogs] = useState(true);
   const [deleting, setDeleting]       = useState(false);
 
   useEffect(() => {
     setLoadingCase(true);
     setLoadingPrec(true);
+    setLoadingLogs(true);
     getCaseById(id)
       .then(setCaseData)
       .catch(() => err('Failed to load case'))
@@ -35,6 +38,10 @@ export default function CaseDetail() {
       .then(setPrecedents)
       .catch(() => {})
       .finally(() => setLoadingPrec(false));
+    getCaseLogs(id)
+      .then(setLogs)
+      .catch(() => {})
+      .finally(() => setLoadingLogs(false));
   }, [id]);
 
   const handleDelete = async () => {
@@ -182,6 +189,45 @@ export default function CaseDetail() {
               </div>
             </div>
           )}
+
+          {/* History / Audit Trail */}
+          <div className="card">
+            <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 'var(--space-md)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <MdHistory /> Case History & Audit Trail
+            </h2>
+            {loadingLogs ? (
+               <div className="spinner-wrapper" style={{ padding: 'var(--space-lg)' }}><div className="spinner" /></div>
+            ) : logs.length === 0 ? (
+               <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No history recorded yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, position: 'relative', paddingLeft: 20 }}>
+                {/* Vertical Line */}
+                <div style={{ position: 'absolute', left: 4, top: 10, bottom: 10, width: 2, background: 'var(--border)' }} />
+                
+                {logs.map((log, idx) => (
+                  <div key={log.log_id} style={{ position: 'relative', paddingBottom: idx === logs.length - 1 ? 0 : 20 }}>
+                    {/* Circle */}
+                    <div style={{ position: 'absolute', left: -20, top: 4, width: 10, height: 10, borderRadius: '50%', background: log.event_type === 'Creation' ? 'var(--gold)' : 'var(--accent-blue)', border: '2px solid var(--bg-card)', zIndex: 1 }} />
+                    
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {log.event_type === 'Creation' ? 'Case Created' : 'Status Changed'}
+                      <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8 }}>· {new Date(log.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                      {log.event_type === 'StatusChange' ? (
+                        <>Changed from <strong style={{color: 'var(--text-muted)'}}>{log.old_value}</strong> to <strong>{log.new_value}</strong></>
+                      ) : (
+                        <>Initialized with status <strong>{log.new_value}</strong></>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MdPerson size={14} /> {log.user_name || 'System Auto'} · <MdEventNote size={14} /> {log.notes}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RIGHT: Keywords + Precedents */}

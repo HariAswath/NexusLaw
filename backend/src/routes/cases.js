@@ -252,6 +252,25 @@ router.get('/:id/precedents', protect, async (req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+//  GET /api/cases/:id/logs
+//  Fetch audit trail for a case
+// ═══════════════════════════════════════════════════════════════════
+router.get('/:id/logs', protect, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      `SELECT l.*, u.name AS user_name 
+       FROM CaseLogs l 
+       LEFT JOIN Users u ON l.user_id = u.user_id 
+       WHERE l.case_id = ? 
+       ORDER BY l.created_at DESC`,
+      [id]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  POST /api/cases — Create case
 // ═══════════════════════════════════════════════════════════════════
 router.post('/', protect, adminOnly, async (req, res, next) => {
@@ -291,6 +310,12 @@ router.post('/', protect, adminOnly, async (req, res, next) => {
       );
     }
 
+    // Log Creation
+    await conn.query(
+      'INSERT INTO CaseLogs (case_id, user_id, event_type, new_value, notes) VALUES (?, ?, ?, ?, ?)',
+      [caseId, req.user.user_id, 'Creation', status, 'Case initialized in system']
+    );
+
     await conn.commit();
     res.status(201).json({ success: true, case_id: caseId });
   } catch (err) {
@@ -312,11 +337,33 @@ router.put('/:id', protect, adminOnly, async (req, res, next) => {
     const { id } = req.params;
     const { title, case_number, case_type, court, status, date_filed, description, keywords, parties, witnesses } = req.body;
 
+    // Manual status change log (to capture user_id)
+    // Capture status BEFORE update to compare
+    const [[oldCase]] = await conn.query('SELECT status FROM Cases WHERE case_id = ?', [id]);
+
+    // Validation: If status is being changed to 'Closed', check for existing judgement
+    if (status === 'Closed' && oldCase.status !== 'Closed') {
+      const [[judgement]] = await conn.query('SELECT judgement_id FROM Judgements WHERE case_id = ?', [id]);
+      if (!judgement) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Cannot close case without a recorded judgement. Please update the judgement first.' 
+        });
+      }
+    }
+
     await conn.query(
       `UPDATE Cases SET title=?, case_number=?, case_type=?, court=?, status=?, date_filed=?, description=?
        WHERE case_id=?`,
       [title, case_number, case_type, court, status, date_filed || null, description || null, id]
     );
+
+    if (oldCase && status && oldCase.status !== status) {
+       await conn.query(
+         'INSERT INTO CaseLogs (case_id, user_id, event_type, old_value, new_value, notes) VALUES (?, ?, ?, ?, ?, ?)',
+         [id, req.user.user_id, 'StatusChange', oldCase.status, status, 'Status updated by user']
+       );
+    }
 
     if (Array.isArray(keywords)) {
       await conn.query('DELETE FROM CaseKeywords WHERE case_id = ?', [id]);

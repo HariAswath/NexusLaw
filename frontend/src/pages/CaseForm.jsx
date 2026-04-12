@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { MdSave, MdArrowBack, MdAdd, MdDeleteOutline } from 'react-icons/md';
 import Layout from '../components/Layout';
-import { createCase, updateCase, getCaseById } from '../api/cases';
+import { createCase, updateCase, getCaseById, saveJudgement } from '../api/cases';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -14,6 +14,7 @@ const EMPTY = {
   title: '', case_number: '', case_type: '', court: '',
   status: 'Open', date_filed: '', description: '', keywords: '',
   parties: [], witnesses: [],
+  judgement: { judge: '', date: '', summary: '' }
 };
 
 export default function CaseForm() {
@@ -47,6 +48,7 @@ export default function CaseForm() {
           keywords: (c.keywords ?? []).join(', '),
           parties: c.parties ?? [],
           witnesses: c.witnesses ?? [],
+          judgement: c.judgement ?? { judge: '', date: '', summary: '' }
         });
       })
       .catch(() => showErr('Failed to load case data'))
@@ -74,6 +76,13 @@ export default function CaseForm() {
     }));
   };
 
+  const updateJudgement = (field, value) => {
+    setForm(f => ({
+      ...f,
+      judgement: { ...f.judgement, [field]: value }
+    }));
+  };
+
   const addWitness = () => {
     setForm(f => ({ ...f, witnesses: [...f.witnesses, { name: '', statement: '' }] }));
   };
@@ -95,6 +104,12 @@ export default function CaseForm() {
     if (!form.case_number.trim()) e.case_number = 'Case number is required';
     if (!form.case_type)          e.case_type   = 'Case type is required';
     if (!form.court)              e.court       = 'Court is required';
+    
+    if (form.status === 'Closed') {
+      if (!form.judgement.judge.trim())   e.judge   = 'Judge name is required for closed cases';
+      if (!form.judgement.date)          e.judgement_date = 'Judgement date is required';
+      if (!form.judgement.summary.trim()) e.summary = 'Judgement summary is required';
+    }
     return e;
   };
 
@@ -110,16 +125,24 @@ export default function CaseForm() {
         keywords: form.keywords.split(',').map((k) => k.trim()).filter(Boolean),
       };
       if (isEdit) {
+        // If status is closed, save judgement first
+        if (form.status === 'Closed') {
+          await saveJudgement(id, form.judgement);
+        }
         await updateCase(id, payload);
         success('Case updated successfully!');
         navigate(`/cases/${id}`);
       } else {
         const created = await createCase(payload);
+        // If creating a closed case (rare but possible)
+        if (form.status === 'Closed') {
+          await saveJudgement(created.case_id, form.judgement);
+        }
         success('Case created successfully!');
         navigate(`/cases/${created.case_id}`);
       }
-    } catch {
-      showErr(`Failed to ${isEdit ? 'update' : 'create'} case`);
+    } catch (err) {
+      showErr(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} case`);
     } finally {
       setSaving(false);
     }
@@ -284,6 +307,32 @@ export default function CaseForm() {
                 </div>
               )}
             </div>
+
+            {/* Judgement Section (Conditional) */}
+            {form.status === 'Closed' && (
+              <div className="card mt-lg" style={{ border: '2px solid var(--gold)' }}>
+                <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--gold)', marginBottom: 'var(--space-lg)' }}>
+                  Judgement Details (Required to Close)
+                </h2>
+                <div className="grid-2" style={{ gap: 'var(--space-md)' }}>
+                  <div className="form-group">
+                    <label className="form-label">Honourable Judge *</label>
+                    <input className={`form-input ${errors.judge ? 'input-error' : ''}`} value={form.judgement.judge} onChange={(e) => updateJudgement('judge', e.target.value)} placeholder="Name of the presiding judge" />
+                    {errors.judge && <span style={{ fontSize: 12, color: 'var(--accent-red)' }}>{errors.judge}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Judgement Date *</label>
+                    <input type="date" className={`form-input ${errors.judgement_date ? 'input-error' : ''}`} value={form.judgement.date} onChange={(e) => updateJudgement('date', e.target.value)} />
+                    {errors.judgement_date && <span style={{ fontSize: 12, color: 'var(--accent-red)' }}>{errors.judgement_date}</span>}
+                  </div>
+                </div>
+                <div className="form-group mt-md">
+                  <label className="form-label">Judgement Summary *</label>
+                  <textarea className={`form-textarea ${errors.summary ? 'input-error' : ''}`} value={form.judgement.summary} onChange={(e) => updateJudgement('summary', e.target.value)} placeholder="Brief summary of the case outcome and legal basis..." rows={4} />
+                  {errors.summary && <span style={{ fontSize: 12, color: 'var(--accent-red)' }}>{errors.summary}</span>}
+                </div>
+              </div>
+            )}
 
             {/* Submit */}
             <div className="flex gap-sm mt-lg" style={{ justifyContent: 'flex-end' }}>
