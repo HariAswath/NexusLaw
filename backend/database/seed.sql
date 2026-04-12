@@ -81,3 +81,12 @@ FROM Cases c1,
      ) p
 WHERE c1.case_number = p.cn1
   AND c2.case_number = p.cn2;
+
+-- ── Witnesses ─────────────────────────────────────────────
+INSERT IGNORE INTO Witnesses (case_id, name, statement)
+SELECT c.case_id, w.name, w.statement FROM Cases c
+JOIN (SELECT 'CIV-2024-001' AS cn, 'Amit Ramesh'   AS name, 'Saw the accused fleeing the scene.' AS statement UNION ALL
+      SELECT 'CIV-2024-001',       'Suresh Raina',          'Verified the time of incident.'         UNION ALL
+      SELECT 'CRM-2024-033',       'Vikram Singh',          'Informant for the gang activities.'      UNION ALL
+      SELECT 'LAB-2024-007',       'Sunita Rao',            'Former HR manager testimony.'
+     ) w ON c.case_number = w.cn;

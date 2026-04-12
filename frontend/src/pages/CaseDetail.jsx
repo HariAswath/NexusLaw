@@ -150,6 +150,23 @@ export default function CaseDetail() {
             </div>
           )}
 
+          {/* Witnesses */}
+          {c.witnesses?.length > 0 && (
+            <div className="card">
+              <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 'var(--space-md)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MdPerson /> Witnesses
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                {c.witnesses.map((w) => (
+                  <div key={w.witness_id} style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '12px 16px', border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{w.name}</div>
+                    {w.statement && <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 6, fontStyle: 'italic' }}>"{w.statement}"</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Judgement */}
           {c.judgement && (
             <div className="card">

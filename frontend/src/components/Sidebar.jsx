@@ -2,7 +2,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdGavel, MdAddCircle, MdSearch,
-  MdLinkOff, MdPeople, MdLogout, MdBalance
+  MdLinkOff, MdPeople, MdLogout, MdBalance, MdAutoAwesome
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,7 @@ const NAV = [
   { to: '/dashboard',  icon: <MdDashboard />,  label: 'Dashboard' },
   { to: '/cases',      icon: <MdGavel />,       label: 'Cases' },
   { to: '/cases/search', icon: <MdSearch />,    label: 'Search & Filter' },
+  { to: '/draft-assistant', icon: <MdAutoAwesome />, label: 'AI Assistant' },
 ];
 
 const ADMIN_NAV = [

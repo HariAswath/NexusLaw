@@ -45,6 +45,16 @@ CREATE TABLE IF NOT EXISTS Parties (
   INDEX idx_party_case (case_id)
 ) ENGINE=InnoDB;
 
+-- ── Witnesses ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS Witnesses (
+  witness_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  case_id    INT UNSIGNED NOT NULL,
+  name       VARCHAR(200) NOT NULL,
+  statement  TEXT,
+  FOREIGN KEY (case_id) REFERENCES Cases(case_id) ON DELETE CASCADE,
+  INDEX idx_witness_case (case_id)
+) ENGINE=InnoDB;
+
 -- ── Judgements ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS Judgements (
   judgement_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

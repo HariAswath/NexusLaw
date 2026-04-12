@@ -70,12 +70,19 @@ router.get('/stats', protect, async (req, res, next) => {
 // ═══════════════════════════════════════════════════════════════════
 router.get('/', protect, async (req, res, next) => {
   try {
-    const { case_type, court, status, keywords } = req.query;
+    const { case_type, court, status, keywords, search } = req.query;
 
-    let sql    = `SELECT DISTINCT c.case_id, c.case_number, c.title,
-                         c.case_type, c.court, c.status, c.date_filed, c.description
-                  FROM Cases c`;
+    let sql = `SELECT DISTINCT c.case_id, c.case_number, c.title,
+                       c.case_type, c.court, c.status, c.date_filed, c.description
+                FROM Cases c`;
     const params = [];
+
+    // Joins for searching
+    if (search) {
+      sql += `
+        LEFT JOIN Parties p ON c.case_id = p.case_id
+        LEFT JOIN Witnesses w ON c.case_id = w.case_id`;
+    }
 
     // If keyword filter → join through CaseKeywords + Keywords
     if (keywords) {
@@ -85,20 +92,27 @@ router.get('/', protect, async (req, res, next) => {
           JOIN CaseKeywords ck ON c.case_id = ck.case_id
           JOIN Keywords k      ON ck.keyword_id = k.keyword_id`;
         const placeholders = kwList.map(() => 'k.keyword LIKE ?').join(' OR ');
-        sql += ` WHERE (${placeholders})`;
+        sql += (sql.includes('WHERE') ? ' AND ' : ' WHERE ') + `(${placeholders})`;
         kwList.forEach((kw) => params.push(`%${kw}%`));
       }
     }
 
     const conditions = [];
-    const prefix     = params.length ? 'AND' : 'WHERE';
-
     if (case_type) { conditions.push(`c.case_type = ?`); params.push(case_type); }
     if (court)     { conditions.push(`c.court = ?`);     params.push(court); }
     if (status)    { conditions.push(`c.status = ?`);    params.push(status); }
 
+    if (search) {
+      conditions.push(`(c.title LIKE ? OR c.case_number LIKE ? OR p.name LIKE ? OR w.name LIKE ?)`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
     if (conditions.length) {
-      sql += ` ${prefix} ` + conditions.join(' AND ');
+      if (!sql.includes('WHERE')) {
+        sql += ` WHERE ` + conditions.join(' AND ');
+      } else {
+        sql += ` AND ` + conditions.join(' AND ');
+      }
     }
 
     sql += ` ORDER BY c.date_filed DESC`;
@@ -130,6 +144,7 @@ router.get('/:id', protect, async (req, res, next) => {
     }
 
     const [parties]    = await pool.query('SELECT * FROM Parties WHERE case_id = ?', [id]);
+    const [witnesses]  = await pool.query('SELECT * FROM Witnesses WHERE case_id = ?', [id]);
     const [judgements] = await pool.query('SELECT * FROM Judgements WHERE case_id = ? LIMIT 1', [id]);
     const keywords     = await getKeywords(id);
 
@@ -138,6 +153,7 @@ router.get('/:id', protect, async (req, res, next) => {
       data: {
         ...caseRow,
         parties,
+        witnesses,
         judgement: judgements[0] || null,
         keywords,
       },
@@ -243,7 +259,7 @@ router.post('/', protect, adminOnly, async (req, res, next) => {
   try {
     await conn.beginTransaction();
 
-    const { title, case_number, case_type, court, status = 'Open', date_filed, description, keywords = [] } = req.body;
+    const { title, case_number, case_type, court, status = 'Open', date_filed, description, keywords = [], parties = [], witnesses = [] } = req.body;
 
     if (!title || !case_number || !case_type || !court) {
       return res.status(400).json({ success: false, message: 'title, case_number, case_type and court are required' });
@@ -258,6 +274,22 @@ router.post('/', protect, adminOnly, async (req, res, next) => {
 
     // Upsert keywords
     await upsertKeywords(conn, caseId, keywords);
+
+    // Insert Parties
+    for (const p of parties) {
+      await conn.query(
+        'INSERT INTO Parties (case_id, name, party_type, lawyer) VALUES (?, ?, ?, ?)',
+        [caseId, p.name, p.party_type, p.lawyer]
+      );
+    }
+
+    // Insert Witnesses
+    for (const w of witnesses) {
+      await conn.query(
+        'INSERT INTO Witnesses (case_id, name, statement) VALUES (?, ?, ?)',
+        [caseId, w.name, w.statement]
+      );
+    }
 
     await conn.commit();
     res.status(201).json({ success: true, case_id: caseId });
@@ -278,7 +310,7 @@ router.put('/:id', protect, adminOnly, async (req, res, next) => {
     await conn.beginTransaction();
 
     const { id } = req.params;
-    const { title, case_number, case_type, court, status, date_filed, description, keywords } = req.body;
+    const { title, case_number, case_type, court, status, date_filed, description, keywords, parties, witnesses } = req.body;
 
     await conn.query(
       `UPDATE Cases SET title=?, case_number=?, case_type=?, court=?, status=?, date_filed=?, description=?
@@ -289,6 +321,26 @@ router.put('/:id', protect, adminOnly, async (req, res, next) => {
     if (Array.isArray(keywords)) {
       await conn.query('DELETE FROM CaseKeywords WHERE case_id = ?', [id]);
       await upsertKeywords(conn, id, keywords);
+    }
+
+    if (Array.isArray(parties)) {
+      await conn.query('DELETE FROM Parties WHERE case_id = ?', [id]);
+      for (const p of parties) {
+        await conn.query(
+          'INSERT INTO Parties (case_id, name, party_type, lawyer) VALUES (?, ?, ?, ?)',
+          [id, p.name, p.party_type, p.lawyer]
+        );
+      }
+    }
+
+    if (Array.isArray(witnesses)) {
+      await conn.query('DELETE FROM Witnesses WHERE case_id = ?', [id]);
+      for (const w of witnesses) {
+        await conn.query(
+          'INSERT INTO Witnesses (case_id, name, statement) VALUES (?, ?, ?)',
+          [id, w.name, w.statement]
+        );
+      }
     }
 
     await conn.commit();

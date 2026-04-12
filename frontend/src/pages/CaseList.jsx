@@ -17,7 +17,7 @@ const PAGE_SIZE = 6;
 export default function CaseList() {
   const [cases, setCases]     = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({ case_type: '', court: '', status: '', keywords: '' });
+  const [filters, setFilters] = useState({ search: '', case_type: '', court: '', status: '', keywords: '' });
   const [applied, setApplied] = useState({});
   const [page, setPage]       = useState(1);
   const [sortKey, setSortKey] = useState('date_filed');
@@ -45,7 +45,7 @@ export default function CaseList() {
   };
 
   const handleClear = () => {
-    setFilters({ case_type: '', court: '', status: '', keywords: '' });
+    setFilters({ search: '', case_type: '', court: '', status: '', keywords: '' });
     setApplied({});
     fetchCases({});
   };
@@ -96,6 +96,17 @@ export default function CaseList() {
             <option value="">All Courts</option>
             {COURTS.map((c) => <option key={c}>{c}</option>)}
           </select>
+        </div>
+
+        <div className="form-group" style={{ flex: 2 }}>
+          <label className="form-label">Search Case / Person</label>
+          <input
+            className="form-input"
+            placeholder="Search by title, party or witness..."
+            value={filters.search}
+            onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
         </div>
 
         <div className="form-group" style={{ maxWidth: 160 }}>

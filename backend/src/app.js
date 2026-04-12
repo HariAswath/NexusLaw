@@ -7,7 +7,9 @@ const errorHandler = require('./middleware/errorHandler');
 const authRouter       = require('./routes/auth');
 const casesRouter      = require('./routes/cases');
 const partiesRouter    = require('./routes/parties');
+const witnessesRouter  = require('./routes/witnesses');
 const judgementsRouter = require('./routes/judgements');
+const aiRouter         = require('./routes/ai');
 
 const app = express();
 
@@ -35,7 +37,9 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date()
 app.use('/api/auth',        authRouter);
 app.use('/api/cases',       casesRouter);
 app.use('/api/cases',       partiesRouter);    // /api/cases/:caseId/parties
+app.use('/api/cases',       witnessesRouter);  // /api/cases/:caseId/witnesses
 app.use('/api/cases',       judgementsRouter); // /api/cases/:caseId/judgement
+app.use('/api/ai',          aiRouter);
 
 // ── 404 catch-all ─────────────────────────────────────
 app.use((_req, res) => {

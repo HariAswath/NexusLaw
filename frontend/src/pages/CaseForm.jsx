@@ -1,12 +1,10 @@
-// src/pages/CaseForm.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { MdSave, MdArrowBack } from 'react-icons/md';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
+import { MdSave, MdArrowBack, MdAdd, MdDeleteOutline } from 'react-icons/md';
 import Layout from '../components/Layout';
 import { createCase, updateCase, getCaseById } from '../api/cases';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Navigate } from 'react-router-dom';
 
 const CASE_TYPES = ['Criminal', 'Civil', 'Constitutional', 'Family', 'Tax', 'Intellectual Property', 'Labour'];
 const COURTS     = ['Supreme Court', 'High Court', 'Sessions Court', 'District Court', 'Labour Court'];
@@ -15,6 +13,7 @@ const STATUSES   = ['Open', 'Pending', 'Closed', 'Appealed'];
 const EMPTY = {
   title: '', case_number: '', case_type: '', court: '',
   status: 'Open', date_filed: '', description: '', keywords: '',
+  parties: [], witnesses: [],
 };
 
 export default function CaseForm() {
@@ -46,6 +45,8 @@ export default function CaseForm() {
           date_filed: c.date_filed ?? '',
           description: c.description ?? '',
           keywords: (c.keywords ?? []).join(', '),
+          parties: c.parties ?? [],
+          witnesses: c.witnesses ?? [],
         });
       })
       .catch(() => showErr('Failed to load case data'))
@@ -56,6 +57,36 @@ export default function CaseForm() {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
     if (errors[name]) setErrors((e) => ({ ...e, [name]: '' }));
+  };
+
+  const addParty = () => {
+    setForm(f => ({ ...f, parties: [...f.parties, { name: '', party_type: 'Plaintiff', lawyer: '' }] }));
+  };
+
+  const removeParty = (idx) => {
+    setForm(f => ({ ...f, parties: f.parties.filter((_, i) => i !== idx) }));
+  };
+
+  const updateParty = (idx, field, value) => {
+    setForm(f => ({
+      ...f,
+      parties: f.parties.map((p, i) => i === idx ? { ...p, [field]: value } : p)
+    }));
+  };
+
+  const addWitness = () => {
+    setForm(f => ({ ...f, witnesses: [...f.witnesses, { name: '', statement: '' }] }));
+  };
+
+  const removeWitness = (idx) => {
+    setForm(f => ({ ...f, witnesses: f.witnesses.filter((_, i) => i !== idx) }));
+  };
+
+  const updateWitness = (idx, field, value) => {
+    setForm(f => ({
+      ...f,
+      witnesses: f.witnesses.map((w, i) => i === idx ? { ...w, [field]: value } : w)
+    }));
   };
 
   const validate = () => {
@@ -177,6 +208,81 @@ export default function CaseForm() {
                 <input id="keywords" name="keywords" className="form-input" value={form.keywords} onChange={handleChange} placeholder="Comma-separated: murder, intent, witness" />
                 <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>These are used for precedent matching and search</span>
               </div>
+            </div>
+
+            {/* Parties Section */}
+            <div className="card mt-lg">
+              <div className="flex items-center justify-between mb-lg">
+                <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)' }}>
+                  Parties Involved
+                </h2>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={addParty}>
+                  <MdAdd /> Add Party
+                </button>
+              </div>
+
+              {form.parties.length === 0 ? (
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No parties added yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {form.parties.map((p, idx) => (
+                    <div key={idx} className="flex gap-md" style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', alignItems: 'flex-start' }}>
+                      <div className="form-group" style={{ flex: 2 }}>
+                        <input className="form-input" placeholder="Party Name" value={p.name} onChange={(e) => updateParty(idx, 'name', e.target.value)} />
+                      </div>
+                      <div className="form-group" style={{ flex: 1.5 }}>
+                        <select className="form-select" value={p.party_type} onChange={(e) => updateParty(idx, 'party_type', e.target.value)}>
+                          <option>Plaintiff</option>
+                          <option>Defendant</option>
+                          <option>Petitioner</option>
+                          <option>Respondent</option>
+                          <option>Intervenor</option>
+                        </select>
+                      </div>
+                      <div className="form-group" style={{ flex: 2 }}>
+                        <input className="form-input" placeholder="Lawyer Name" value={p.lawyer} onChange={(e) => updateParty(idx, 'lawyer', e.target.value)} />
+                      </div>
+                      <button type="button" className="btn btn-ghost text-danger" onClick={() => removeParty(idx)} style={{ padding: 8, marginTop: 4 }}>
+                        <MdDeleteOutline size={20} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Witnesses Section */}
+            <div className="card mt-lg">
+              <div className="flex items-center justify-between mb-lg">
+                <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)' }}>
+                  Witnesses
+                </h2>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={addWitness}>
+                  <MdAdd /> Add Witness
+                </button>
+              </div>
+
+              {form.witnesses.length === 0 ? (
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No witnesses added yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {form.witnesses.map((w, idx) => (
+                    <div key={idx} style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+                      <div className="flex gap-md mb-sm">
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <input className="form-input" placeholder="Witness Name" value={w.name} onChange={(e) => updateWitness(idx, 'name', e.target.value)} />
+                        </div>
+                        <button type="button" className="btn btn-ghost text-danger" onClick={() => removeWitness(idx)} style={{ padding: 8 }}>
+                          <MdDeleteOutline size={20} />
+                        </button>
+                      </div>
+                      <div className="form-group">
+                        <textarea className="form-textarea" placeholder="Witness Statement (optional)" value={w.statement} onChange={(e) => updateWitness(idx, 'statement', e.target.value)} rows={2} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit */}
