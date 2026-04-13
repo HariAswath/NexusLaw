@@ -25,10 +25,10 @@ async function migrate() {
       ) ENGINE=InnoDB;
     `);
     
-    console.log('✅ SupportTickets table created successfully.');
+    console.log(' SupportTickets table created successfully.');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Migration failed:', err);
+    console.error(' Migration failed:', err);
     process.exit(1);
   }
 }

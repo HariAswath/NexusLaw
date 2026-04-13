@@ -1,10 +1,5 @@
-// src/middleware/auth.js — JWT verification middleware
 const jwt = require('jsonwebtoken');
 
-/**
- * Protects a route — verifies Bearer token.
- * Attaches decoded payload to req.user.
- */
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
   const token      = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -21,9 +16,6 @@ const protect = (req, res, next) => {
   }
 };
 
-/**
- * Requires admin role — use after protect().
- */
 const adminOnly = (req, res, next) => {
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Admin access required' });

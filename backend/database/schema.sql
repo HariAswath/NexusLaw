@@ -1,7 +1,3 @@
--- ============================================================
---  NexusLaw — MySQL Schema
---  Run this once in MySQL Workbench to create your database
--- ============================================================
 
 CREATE DATABASE IF NOT EXISTS nexuslaw CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE nexuslaw;
@@ -137,3 +133,22 @@ CREATE TABLE IF NOT EXISTS SupportTickets (
   INDEX idx_ticket_status (status),
   INDEX idx_ticket_user   (user_id)
 ) ENGINE=InnoDB;
+
+-- -- Stored Procedures ---------------------------------------
+DELIMITER //
+CREATE PROCEDURE sp_ResolveTicket(
+    IN p_ticket_id INT,
+    IN p_admin_id INT,
+    IN p_reply TEXT,
+    IN p_status VARCHAR(50)
+)
+BEGIN
+    UPDATE SupportTickets 
+    SET 
+        status = p_status, 
+        admin_reply = p_reply, 
+        admin_id = p_admin_id,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE ticket_id = p_ticket_id;
+END //
+DELIMITER ;

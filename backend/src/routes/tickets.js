@@ -55,11 +55,12 @@ router.patch('/:id', async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
 
   try {
+    // Calling Stored Procedure instead of raw UPDATE
     await pool.execute(
-      'UPDATE SupportTickets SET status = ?, admin_reply = ?, admin_id = ? WHERE ticket_id = ?',
-      [status || 'Resolved', admin_reply, adminId, id]
+      'CALL sp_ResolveTicket(?, ?, ?, ?)',
+      [id, adminId, admin_reply, status || 'Resolved']
     );
-    res.json({ message: 'Ticket updated successfully' });
+    res.json({ message: 'Ticket resolved via Stored Procedure' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -24,9 +24,6 @@ async function migrate() {
     console.log('CaseLogs table created.');
 
     // 2. Create Trigger for Status Change
-    // We use a "Session variable" trick to pass the user_id from Node.js to the Trigger if we want.
-    // Or we can just log the change without the user_id in the trigger, and handle "who" in the app layer.
-    // I'll implement the trigger for the automated "What" part.
     await pool.query(`DROP TRIGGER IF EXISTS tr_case_status_audit;`);
     await pool.query(`
       CREATE TRIGGER tr_case_status_audit
