@@ -11,17 +11,17 @@ const pool = mysql.createPool({
   connectionLimit:    10,
   queueLimit:         0,
   timezone:           '+00:00',
-  dateStrings:        true,   // Return DATE columns as 'YYYY-MM-DD' strings, not JS Date objects
+  dateStrings:        true,  
 });
 
 // Test connection on startup
 pool.getConnection()
   .then((conn) => {
-    console.log('✅  MySQL connected — database:', process.env.DB_NAME);
+    console.log('MySQL connected — database:', process.env.DB_NAME);
     conn.release();
   })
   .catch((err) => {
-    console.error('❌  MySQL connection failed:', err.message);
+    console.error('MySQL connection failed:', err.message);
     process.exit(1);
   });
 

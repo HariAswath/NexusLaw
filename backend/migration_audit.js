@@ -21,7 +21,7 @@ async function migrate() {
         FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
       ) ENGINE=InnoDB;
     `);
-    console.log('✅ CaseLogs table created.');
+    console.log('CaseLogs table created.');
 
     // 2. Create Trigger for Status Change
     // We use a "Session variable" trick to pass the user_id from Node.js to the Trigger if we want.
@@ -39,11 +39,11 @@ async function migrate() {
         END IF;
       END;
     `);
-    console.log('✅ Status change trigger created.');
+    console.log(' Status change trigger created.');
 
     process.exit(0);
   } catch (err) {
-    console.error('❌ Migration failed:', err);
+    console.error(' Migration failed:', err);
     process.exit(1);
   }
 }
