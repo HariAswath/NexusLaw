@@ -9,6 +9,8 @@ import CaseList   from './pages/CaseList';
 import CaseDetail from './pages/CaseDetail';
 import CaseForm   from './pages/CaseForm';
 import DraftAssistant from './pages/DraftAssistant';
+import Support    from './pages/Support';
+import AdminSupport from './pages/AdminSupport';
 import NotFound   from './pages/NotFound';
 
 export default function App() {
@@ -28,6 +30,8 @@ export default function App() {
             <Route path="/cases/:id"        element={<CaseDetail />} />
             <Route path="/cases/:id/edit"   element={<CaseForm />} />
             <Route path="/draft-assistant"  element={<DraftAssistant />} />
+            <Route path="/support"          element={<Support />} />
+            <Route path="/admin/support"    element={<AdminSupport />} />
 
             {/* Redirects */}
             <Route path="/"   element={<Navigate to="/dashboard" replace />} />

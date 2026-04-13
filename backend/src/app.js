@@ -10,6 +10,8 @@ const partiesRouter    = require('./routes/parties');
 const witnessesRouter  = require('./routes/witnesses');
 const judgementsRouter = require('./routes/judgements');
 const aiRouter         = require('./routes/ai');
+const ticketsRouter    = require('./routes/tickets');
+const { protect }      = require('./middleware/auth');
 
 const app = express();
 
@@ -17,7 +19,7 @@ const app = express();
 app.use(cors({
   origin:      process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   credentials: true,
-  methods:     ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -40,6 +42,7 @@ app.use('/api/cases',       partiesRouter);    // /api/cases/:caseId/parties
 app.use('/api/cases',       witnessesRouter);  // /api/cases/:caseId/witnesses
 app.use('/api/cases',       judgementsRouter); // /api/cases/:caseId/judgement
 app.use('/api/ai',          aiRouter);
+app.use('/api/tickets',     protect, ticketsRouter);
 
 // ── 404 catch-all ─────────────────────────────────────
 app.use((_req, res) => {

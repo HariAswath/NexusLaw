@@ -119,3 +119,21 @@ CREATE TABLE IF NOT EXISTS CaseLogs (
   INDEX idx_log_case (case_id)
 ) ENGINE=InnoDB;
 
+
+-- -- Support Tickets -----------------------------------------
+CREATE TABLE IF NOT EXISTS SupportTickets (
+  ticket_id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id      INT UNSIGNED NOT NULL,
+  category     ENUM(\'Technical Issue\', \'Case Filing Help\', \'Billing\', \'General Inquiry\') NOT NULL,
+  subject      VARCHAR(255) NOT NULL,
+  description  TEXT NOT NULL,
+  status       ENUM(\'Open\', \'In Progress\', \'Resolved\', \'Closed\') NOT NULL DEFAULT \'Open\',
+  admin_id     INT UNSIGNED,
+  admin_reply  TEXT,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (admin_id) REFERENCES Users(user_id) ON DELETE SET NULL,
+  INDEX idx_ticket_status (status),
+  INDEX idx_ticket_user   (user_id)
+) ENGINE=InnoDB;

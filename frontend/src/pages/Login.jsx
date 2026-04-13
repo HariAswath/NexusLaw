@@ -106,28 +106,34 @@ export default function Login() {
         </form>
 
         {/* Demo Accounts */}
-        <div style={{ marginTop: 'var(--space-lg)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-md)' }}>
-          <p style={{ fontSize: 11.5, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 10 }}>
-            Demo Accounts — click to fill
+        <div style={{ marginTop: 'var(--space-xl)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-lg)' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 14 }}>
+            Quick Access Demo Accounts
           </p>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
               type="button"
               className="btn btn-secondary w-full"
-              style={{ justifyContent: 'center', fontSize: 12 }}
+              style={{ justifyContent: 'space-between', padding: '10px 14px', fontSize: 13 }}
               onClick={() => fillDemo('admin')}
             >
-              <span className="badge badge-admin" style={{ fontSize: 10 }}>Admin</span>
-              admin@nexuslaw.com
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="badge badge-admin" style={{ fontSize: 9, padding: '2px 8px' }}>Admin</span>
+                <span style={{ color: 'var(--text-secondary)' }}>admin@nexuslaw.com</span>
+              </div>
+              <MdLogin style={{ fontSize: 14, opacity: 0.5 }} />
             </button>
             <button
               type="button"
               className="btn btn-secondary w-full"
-              style={{ justifyContent: 'center', fontSize: 12 }}
+              style={{ justifyContent: 'space-between', padding: '10px 14px', fontSize: 13 }}
               onClick={() => fillDemo('user')}
             >
-              <span className="badge badge-user" style={{ fontSize: 10 }}>User</span>
-              user@nexuslaw.com
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="badge badge-user" style={{ fontSize: 9, padding: '2px 8px' }}>User</span>
+                <span style={{ color: 'var(--text-secondary)' }}>user@nexuslaw.com</span>
+              </div>
+              <MdLogin style={{ fontSize: 14, opacity: 0.5 }} />
             </button>
           </div>
         </div>

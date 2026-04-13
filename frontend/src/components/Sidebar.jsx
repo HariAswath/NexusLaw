@@ -2,7 +2,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MdDashboard, MdGavel, MdAddCircle, MdSearch,
-  MdLinkOff, MdPeople, MdLogout, MdBalance, MdAutoAwesome
+  MdLinkOff, MdPeople, MdLogout, MdBalance, MdAutoAwesome, MdHelpCenter, MdSupportAgent
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,10 +11,12 @@ const NAV = [
   { to: '/cases',      icon: <MdGavel />,       label: 'Cases' },
   { to: '/cases/search', icon: <MdSearch />,    label: 'Search & Filter' },
   { to: '/draft-assistant', icon: <MdAutoAwesome />, label: 'AI Assistant' },
+  { to: '/support',         icon: <MdHelpCenter />,  label: 'Help & Support' },
 ];
 
 const ADMIN_NAV = [
-  { to: '/cases/new',  icon: <MdAddCircle />,   label: 'Add Case' },
+  { to: '/cases/new',     icon: <MdAddCircle />,   label: 'Add Case' },
+  { to: '/admin/support', icon: <MdSupportAgent />, label: 'Support Desk' },
 ];
 
 export default function Sidebar() {
@@ -43,16 +45,21 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         <span className="nav-section-label">Main Menu</span>
 
-        {NAV.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-          >
-            <span className="nav-item-icon">{icon}</span>
-            {label}
-          </NavLink>
-        ))}
+        {NAV.map(({ to, icon, label }) => {
+          // Hide "Help & Support" from Admin Main Menu since they have Support Desk
+          if (isAdmin && label === 'Help & Support') return null;
+          
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            >
+              <span className="nav-item-icon">{icon}</span>
+              {label}
+            </NavLink>
+          );
+        })}
 
         {isAdmin && (
           <>
